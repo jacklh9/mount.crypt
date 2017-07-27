@@ -1,7 +1,8 @@
 #!python3
 
-import configparser, csv, getopt, getpass, subprocess, sys
+import configparser, csv, getopt, getpass, subprocess, sys, time
 from os.path import basename
+from pathlib import Path
 
 class MountCrypt:
     
@@ -29,6 +30,13 @@ class MountCrypt:
             num_errors = 0
             mounts = self.config[volume]['mounts'].split(',')
 
+            # Ensure volume is attached to server else skip volume
+            # NOTE: In case it's at an off-site backup location today
+            volume_uuid_path = Path("/".join(('/dev/disk/by-uuid', uuid)))
+            if not volume_uuid_path.exists():
+                print("Volume not present. Skipping...")
+                continue 
+            
             try:
                 # Decrypt volume
                 p = subprocess.Popen([self.cryptsetup, "open", "--type", "luks", "UUID=" + uuid, volume],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
@@ -56,6 +64,8 @@ class MountCrypt:
 
     def run_programs(self, volume):
         if (self.config.has_option(volume,'run_progs')):
+            print("Sleeping for {} seconds before running programs".format(self.sleep))
+            time.sleep(self.sleep)
             for program in self.config[volume]['run_progs'].split(','):
                 print("Running: {}".format(program))
                 try:
