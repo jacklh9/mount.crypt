@@ -1,0 +1,7 @@
+OPEN ISSUES
+
+* Doesn't actually display the help menu when no args are provided.
+* Sleep var doesn't actually do anything yet.
+* Need to add closing luks volumes capability.
+* Need to add flag for opening vs closing luks volumes.
+
