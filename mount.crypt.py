@@ -91,14 +91,19 @@ mount=/bin/mount
 # mounts = /mnt/mount-point,/mnt/other-mount-point,...
 #
 # [data]
-# UUID = 1df00a9d-15e6-4aeb-b592-1675f063e992
+# UUID = 123-abc-def-456
 # mounts = /mnt/a,/mnt/b
 #
-# Optionally include any commands to run after a successful mount
+# Optionally include any commands to run after a successful mount.
 # run_progs = my-script.sh --some-flag,my-other-script.sh
 # 
 # NOTE: Lists MUST NOT have ANY spaces nor double-quotes 
 # in-between the comma delimiter.
+
+[test_internal_3.6T_1]
+UUID=123-abc-def-456
+mounts=/mnt/datafs,/mnt/local-backupfs
+#run_progs=lxc list,echo bob
 
 """
 # End here-doc
