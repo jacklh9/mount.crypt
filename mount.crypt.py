@@ -17,7 +17,6 @@ class MountCrypt:
         print("Using config {}".format(config_file))
         self.config = configparser.ConfigParser()
         self.config.read(config_file)
-        self.base_dir = self.config['DEFAULT']['base_dir']
         self.cryptsetup = self.config['DEFAULT']['cryptsetup']
         self.mount = self.config['DEFAULT']['mount']
         self.volumes = self.config.sections()
@@ -86,8 +85,8 @@ OPTIONS
 CONFIG FILE
 
 EXAMPLE:
+
 [DEFAULT]
-base_dir=/usr/local/sbin
 cryptsetup=/sbin/cryptsetup
 mount=/bin/mount
 
@@ -100,20 +99,20 @@ mount=/bin/mount
 # UUID = abc...def
 # mounts = /mnt/mount-point,/mnt/other-mount-point,...
 #
-# [data]
-# UUID = 123-abc-def-456
-# mounts = /mnt/a,/mnt/b
-#
-# Optionally include any commands to run after a successful mount.
+# Optionally include any commands to run after a successful mount
 # run_progs = my-script.sh --some-flag,my-other-script.sh
 # 
 # NOTE: Lists MUST NOT have ANY spaces nor double-quotes 
 # in-between the comma delimiter.
 
-[test_internal_3.6T_1]
-UUID=123-abc-def-456
-mounts=/mnt/datafs,/mnt/local-backupfs
-#run_progs=lxc list,echo bob
+[backup]
+UUID=123ab45c-de67-8901-a234-bcd5efab678c
+mounts=/mnt/backup
+
+[data]
+UUID=456ab45c-de67-8901-a234-bcd5efab601d
+mounts=/mnt/data,/opt/vms
+run_progs=lxc start testbox devbox,lxc list
 
 """
 # End here-doc
