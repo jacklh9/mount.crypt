@@ -1,6 +1,6 @@
 #!python3
 
-import configparser, csv, getopt, getpass, subprocess, sys, time
+import configparser, csv, getopt, getpass, psutil, subprocess, sys, time
 from os.path import basename
 from pathlib import Path
 
@@ -24,7 +24,7 @@ class MountCrypt:
     def mount_volumes(self):
         for volume in self.volumes:
             uuid = self.config[volume]['UUID']
-            print("Volume: {}".format(volume))
+            print("\nVolume: {}".format(volume))
             print("UUID: {}".format(uuid))
             num_errors = 0
             mounts = self.config[volume]['mounts'].split(',')
@@ -35,6 +35,17 @@ class MountCrypt:
             if not volume_uuid_path.exists():
                 print("Volume not present. Skipping...")
                 continue 
+
+            volume_mapper_path = Path("/".join(('/dev/mapper', volume)))
+
+            if volume_mapper_path.exists():
+                print("Volume already decrypted. Skipping...")
+                continue
+
+            response = input("Decrypt? ([y],n): ")
+            if response.lower() not in ['','y']:
+                print("Skipping...")
+                continue
             
             try:
                 # Decrypt volume
@@ -47,8 +58,19 @@ class MountCrypt:
                 num_errors += 1
 
             if (num_errors == 0):
+
+                partitions = psutil.disk_partitions()
+
                 for mnt_pt in mounts:
                     print("Mounting: {}".format(mnt_pt))
+
+                    # Extract a list of mountpoints from partitions object...
+                    mounts = list([partition.mountpoint for partition in partitions])
+                    # ... and see if this particular mountpoint is already mounted.
+                    if mnt_pt in mounts:
+                        print("Already mounted. Skipping...")
+                        continue
+                    
                     try:
                         # Mount volume
                         subprocess.Popen([self.mount, mnt_pt])
