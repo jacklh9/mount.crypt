@@ -7,7 +7,7 @@ from pathlib import Path
 class MountCrypt:
     
     def __init__(self):
-        self.version = "0.2.2b"
+        self.version = "0.2.3b"
 
     def print_version(self):
         print("Version: {version}".format(version=self.version))
@@ -93,7 +93,8 @@ class MountCrypt:
     def run_programs(self, volume):
         if (self.config.has_option(volume,'run_progs')):
             for program in self.config[volume]['run_progs'].split(','):
-                response = input("Run task {} ([y],n)? ".format(program))
+                print("TASK: {}".format(program));
+                response = input("Run the above task? ([y],n): ")
                 if response.lower() in ['','y']:
                     try:
                         subprocess.run([program], shell=True, check=True)

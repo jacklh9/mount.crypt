@@ -1,7 +1,12 @@
 # RELEASES
 
+0.2.2b:
+* Asks user if wants to run each task after mounting.
+
 0.2.1b:
-* Added checks to see if already decrypted and mounted.
+* Added checks to see if already decrypted and mounted and skips,
+  else prompts user.
+* Asks user if wants to decrypt or mount when not already decrypted or mounted.
 * Prints error if no or invalid arguments.
 
 0.1b initial
