@@ -97,7 +97,6 @@ class MountCrypt:
             response = input("Run requested tasks? ([y],n): ")
             if response.lower() not in ['','y']:
                 print("Skipping...")
-                continue
             else:
                 print("Sleeping for {} seconds before running programs".format(self.sleep))
                 time.sleep(self.sleep)
