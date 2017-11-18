@@ -7,8 +7,7 @@ from pathlib import Path
 class MountCrypt:
     
     def __init__(self):
-        self.sleep = 30   # seconds to sleep between commands
-        self.version = "0.2.1b"
+        self.version = "0.2.2b"
 
     def print_version(self):
         print("Version: {version}".format(version=self.version))
@@ -93,24 +92,19 @@ class MountCrypt:
 
     def run_programs(self, volume):
         if (self.config.has_option(volume,'run_progs')):
-
-            response = input("Run requested tasks? ([y],n): ")
-            if response.lower() not in ['','y']:
-                print("Skipping...")
-            else:
-                print("Sleeping for {} seconds before running programs".format(self.sleep))
-                time.sleep(self.sleep)
-                for program in self.config[volume]['run_progs'].split(','):
-                    print("Running: {}".format(program))
+            for program in self.config[volume]['run_progs'].split(','):
+                response = input("Run task {} ([y],n)? ".format(program))
+                if response.lower() in ['','y']:
                     try:
                         subprocess.run([program], shell=True, check=True)
                     except Exception as details:
                         print("Error: {}".format(details))
-                        
+                else:
+                    print("Skipping...")
         else:
-            print("Nothing to run for this volume")
+            print("No tasks to run for this volume.")
 
-        
+            
     def print_usage(self):
         usage_text="""{program} [options]
 
