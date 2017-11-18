@@ -16,5 +16,7 @@ OPTIONS
 
 EXAMPLE CONFIG FILE:
 
-See mount.crypt.ini
+    See mount.crypt.ini
+
+
 
