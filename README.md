@@ -26,11 +26,11 @@ mount=/bin/mount
 \# LABEL=data      /opt/vbox       btrfs     compress=lzo,defaults,noatime,noauto,nodiratime,subvol=@vbox 0       0
 \# 
 \# mount.crypt.ini entry format:
-###
+\#
 \# [mapper-name]
 \# UUID = abc...def
 \# mounts = /mnt/mount-point,/mnt/other-mount-point,...
-###
+\#
 \# Optionally include any commands to run after a successful mount
 \# run_progs = my-script.sh --some-flag,my-other-script.sh
 \# 
