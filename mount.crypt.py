@@ -8,7 +8,7 @@ class MountCrypt:
     
     def __init__(self):
         self.sleep = 30   # seconds to sleep between commands
-        self.version = "0.2b"
+        self.version = "0.2.1b"
 
     def print_version(self):
         print("Version: {version}".format(version=self.version))
@@ -93,14 +93,21 @@ class MountCrypt:
 
     def run_programs(self, volume):
         if (self.config.has_option(volume,'run_progs')):
-            print("Sleeping for {} seconds before running programs".format(self.sleep))
-            time.sleep(self.sleep)
-            for program in self.config[volume]['run_progs'].split(','):
-                print("Running: {}".format(program))
-                try:
-                    subprocess.run([program], shell=True, check=True)
-                except Exception as details:
-                    print("Error: {}".format(details))
+
+            response = input("Run requested tasks? ([y],n): ")
+            if response.lower() not in ['','y']:
+                print("Skipping...")
+                continue
+            else:
+                print("Sleeping for {} seconds before running programs".format(self.sleep))
+                time.sleep(self.sleep)
+                for program in self.config[volume]['run_progs'].split(','):
+                    print("Running: {}".format(program))
+                    try:
+                        subprocess.run([program], shell=True, check=True)
+                    except Exception as details:
+                        print("Error: {}".format(details))
+                        
         else:
             print("Nothing to run for this volume")
 
