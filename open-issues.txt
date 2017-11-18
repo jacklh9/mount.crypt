@@ -1,6 +1,5 @@
-OPEN ISSUES
+## OPEN ISSUES
 
-* Doesn't actually display the help menu when no args are provided.
+* Print what tasks are to be run.
+* Prompt to run tasks only if defined.
 * Need to add closing luks volumes capability.
-* Need to add flag for opening vs closing luks volumes.
-

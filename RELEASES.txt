@@ -1,0 +1,7 @@
+# RELEASES
+
+0.2.1b:
+* Added checks to see if already decrypted and mounted.
+* Prints error if no or invalid arguments.
+
+0.1b initial
