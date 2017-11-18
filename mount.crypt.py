@@ -37,47 +37,55 @@ class MountCrypt:
                 continue 
 
             volume_mapper_path = Path("/".join(('/dev/mapper', volume)))
+            if not volume_mapper_path.exists():
+                response = input("Decrypt? ([y],n): ")
+                if response.lower() not in ['','y']:
+                    print("Skipping...")
+                    continue
+                
+                try:
+                    # Decrypt volume
+                    p = subprocess.Popen([self.cryptsetup, "open", "--type", "luks", "UUID=" + uuid, volume],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
+                    p.stdin.write(bytes(getpass.getpass("Enter passphrase: "), 'utf-8'))
+                    p.communicate()[0]
+                    p.stdin.close()
+                except Exception as details:
+                    print("Command error: {}".format(details))
+                    num_errors += 1
 
-            if volume_mapper_path.exists():
-                print("Volume already decrypted. Skipping...")
-                continue
+            else:
+                print("Volume already decrypted.")
 
-            response = input("Decrypt? ([y],n): ")
-            if response.lower() not in ['','y']:
-                print("Skipping...")
-                continue
-            
-            try:
-                # Decrypt volume
-                p = subprocess.Popen([self.cryptsetup, "open", "--type", "luks", "UUID=" + uuid, volume],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
-                p.stdin.write(bytes(getpass.getpass("Enter passphrase: "), 'utf-8'))
-                p.communicate()[0]
-                p.stdin.close()
-            except Exception as details:
-                print("Command error: {}".format(details))
-                num_errors += 1
-
+            # Attempt mounting requested mount-points,
+            # if volume successfully mounted earier.
             if (num_errors == 0):
-
                 partitions = psutil.disk_partitions()
 
                 for mnt_pt in mounts:
                     print("Mounting: {}".format(mnt_pt))
 
-                    # Extract a list of mountpoints from partitions object...
+                    # Extract a list of existing mounted
+                    # mountpoints from partitions object...
                     mounts = list([partition.mountpoint for partition in partitions])
                     # ... and see if this particular mountpoint is already mounted.
                     if mnt_pt in mounts:
                         print("Already mounted. Skipping...")
                         continue
-                    
-                    try:
-                        # Mount volume
-                        subprocess.Popen([self.mount, mnt_pt])
-                    except Exception as details:
-                        print("Command error: {}".format(details))
-                        num_errors += 1
+                    else:
+                        # See if the user even WANTS to mount this.
+                        response = input("Mount? ([y],n): ")
+                        if response.lower() not in ['','y']:
+                            print("Skipping...")
+                            continue
+                        else:
+                            try:
+                                # Mount volume
+                                subprocess.Popen([self.mount, mnt_pt])
+                            except Exception as details:
+                                print("Command error: {}".format(details))
+                                num_errors += 1
 
+            # Did the volume or ANY of the mounts fail?
             if (num_errors == 0):
                 self.run_programs(volume)
             else:
