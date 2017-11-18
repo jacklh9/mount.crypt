@@ -1,3 +1,5 @@
 ## OPEN ISSUES
 
+* Print what tasks are to be run.
+* Prompt to run tasks only if defined.
 * Need to add closing luks volumes capability.
