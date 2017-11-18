@@ -1,6 +1,3 @@
-OPEN ISSUES
+## OPEN ISSUES
 
-* Doesn't actually display the help menu when no args are provided.
 * Need to add closing luks volumes capability.
-* Need to add flag for opening vs closing luks volumes.
-

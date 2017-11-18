@@ -1,4 +1,4 @@
-#!python3
+ #!python3
 
 import configparser, csv, getopt, getpass, psutil, subprocess, sys, time
 from os.path import basename
@@ -8,7 +8,7 @@ class MountCrypt:
     
     def __init__(self):
         self.sleep = 30   # seconds to sleep between commands
-        self.version = "0.1b"
+        self.version = "0.2b"
 
     def print_version(self):
         print("Version: {version}".format(version=self.version))
@@ -116,6 +116,13 @@ mount=/bin/mount
 # ------------------
 # NOTE: The mapper-name and mount-points need to also be defined and
 # match the entries for these respective drives in /etc/fstab.
+# 
+# Example /etc/fstab btrfs mount-point entries:
+# 
+# LABEL=data      /mnt/data     btrfs     compress=lzo,defaults,noatime,noauto,nodiratime,subvol=@data  0       0
+# LABEL=data      /opt/vbox       btrfs     compress=lzo,defaults,noatime,noauto,nodiratime,subvol=@vbox 0       0
+# 
+# mount.crypt.ini entry format:
 #
 # [mapper-name]
 # UUID = abc...def
@@ -126,6 +133,7 @@ mount=/bin/mount
 # 
 # NOTE: Lists MUST NOT have ANY spaces nor double-quotes 
 # in-between the comma delimiter.
+#
 
 [backup]
 UUID=123ab45c-de67-8901-a234-bcd5efab678c
@@ -133,22 +141,34 @@ mounts=/mnt/backup
 
 [data]
 UUID=456ab45c-de67-8901-a234-bcd5efab601d
-mounts=/mnt/data,/opt/vms
+mounts=/mnt/data,/opt/vbox
 run_progs=lxc start testbox devbox,lxc list
 
 """
 # End here-doc
-
         print(usage_text.format(program=sys.argv[0]))
 
+        ### End print_usage()
+
+    def print_error(self, args=[]):
+        CMD_LINE_SYNTAX_ERROR = 2 # By convention per sys.exit()
+
+        if args:
+            # stringify args
+            print("Invalid argument(s): {}".format(' '.join([str(arg) for arg in args])))
+        else:
+            print ("No arguments specified!")
+
+        print("For help, run: {program} {help_flag}".format(program=basename(__file__), help_flag="[-h | --help]"))
+        sys.exit(CMD_LINE_SYNTAX_ERROR)
+
+        
 def main(argv):
     try:
         opts, args = getopt.getopt(argv,"c:hv", 
             ["config=", "help", "version"])
     except getopt.GetoptError:
-        print("Invalid option or missing argument!")
-        print("For help, run: {program} {help_flag}".format(program=basename(__file__), help_flag="[-h | --help]"))
-        sys.exit(2)
+        MountCrypt().print_error(argv)
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
@@ -162,9 +182,10 @@ def main(argv):
             mc.read_config(arg)
             mc.mount_volumes()
         else:
-            print("ERROR: Must provide all required options. See usage below.")
-            print("For help, run: {program} {help_flag}".format(program=basename(__file__), help_flag="[-h | --help]"))
-            sys.exit(2)
+            MountCrypt().print_error(opt)
+
+    if not opts:
+        MountCrypt().print_error(argv)
 
 
 if __name__ == "__main__": main(sys.argv[1:])
