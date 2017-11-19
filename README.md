@@ -93,3 +93,7 @@ SAMPLE RUN:
     Run the above task? ([y],n): 
 	
 
+LICENSING
+
+    jacklh9/mount.crypt is licensed under the GNU General Public
+    License v3.0. See file LICENSE for details.
