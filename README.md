@@ -20,7 +20,9 @@ EXAMPLE CONFIG FILE:
 
 
 SAMPLE RUN:
-    
+
+    ./mount.crypt.sh
+
     Using config ./mount.crypt.ini
     Volume: backup_2.7T_1
     UUID: 217b80b0-9450-45bd-be92-627f61e65542
