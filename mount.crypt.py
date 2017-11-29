@@ -90,6 +90,14 @@ class MountCrypt:
             else:
                 print("Errors found! Did not run associated program(s).")
 
+    def unmount_volumes(self):
+        for volume in self.volumes:
+            #is volume decrypted
+                # for each volume mount
+                    # is mounted
+                        # ask to unmount
+        
+
     def run_programs(self, volume):
         if (self.config.has_option(volume,'run_progs')):
             for program in self.config[volume]['run_progs'].split(','):
