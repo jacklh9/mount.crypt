@@ -9,6 +9,11 @@ class MountCrypt:
     def __init__(self):
         self.version = "0.2.3b"
 
+    def is_decrypted(self, volume):
+        # Decrypted device volumes appear in /dev/mapper/
+        volume_mapper_path = Path("/".join(('/dev/mapper', volume)))
+        return volume_mapper_path.exists()
+
     def print_version(self):
         print("Version: {version}".format(version=self.version))
 
@@ -35,8 +40,7 @@ class MountCrypt:
                 print("Volume not present. Skipping...")
                 continue 
 
-            volume_mapper_path = Path("/".join(('/dev/mapper', volume)))
-            if not volume_mapper_path.exists():
+            if not is_decrypted(self, volume)
                 response = input("Decrypt? ([y],n): ")
                 if response.lower() not in ['','y']:
                     print("Skipping...")
@@ -91,7 +95,8 @@ class MountCrypt:
                 print("Errors found! Did not run associated program(s).")
 
     def unmount_volumes(self):
-        for volume in self.volumes:
+        pass
+        #for volume in self.volumes:
             #is volume decrypted
                 # for each volume mount
                     # is mounted
