@@ -6,8 +6,13 @@ from pathlib import Path
 
 class MountCrypt:
     
-    def __init__(self):
+    def __init__(self, interactive=True):
         self.version = "0.2.3b"
+        # We explicity check if a valid boolean
+        if interactive == True:
+            self.interactive = True
+        else:
+            self.interactive = False
 
     def is_decrypted(self, volume):
         # Decrypted device volumes appear in /dev/mapper/
@@ -41,8 +46,7 @@ class MountCrypt:
                 continue 
 
             if not self.is_decrypted(volume):
-                response = input("Decrypt? ([y],n): ")
-                if response.lower() not in ['','y']:
+                if not self._response_yes("Decrypt?", default=True)
                     print("Skipping...")
                     continue
                 
@@ -76,8 +80,7 @@ class MountCrypt:
                         continue
                     else:
                         # See if the user even WANTS to mount this.
-                        response = input("Mount? ([y],n): ")
-                        if response.lower() not in ['','y']:
+                        if self._response_yes("Mount?", default=True):
                             print("Skipping...")
                             continue
                         else:
@@ -107,8 +110,7 @@ class MountCrypt:
         if (self.config.has_option(volume,'run_progs')):
             for program in self.config[volume]['run_progs'].split(','):
                 print("TASK: {}".format(program));
-                response = input("Run the above task? ([y],n): ")
-                if response.lower() in ['','y']:
+                if self._response_yes("Run the above task?", default=True):
                     try:
                         subprocess.run([program], shell=True, check=True)
                     except Exception as details:
@@ -123,8 +125,11 @@ class MountCrypt:
         usage_text="""{program} [options]
 
 OPTIONS
-    -c, --config <my-config.ini>     Configuration file
-    -h, --help                    Print this help
+    -c, --config <my-config.ini>    Configuration file
+    -n, --non-interactive           Non-interactive mode
+        NOTE: You will still be prompted for decryption passphrase, if needed.
+    -i, --interactive               Interactive mode [default]
+    -h, --help                      Print this help
 
 CONFIG FILE
 
@@ -172,6 +177,7 @@ run_progs=lxc start testbox devbox,lxc list
 
         ### End print_usage()
 
+
     def print_error(self, args=[]):
         CMD_LINE_SYNTAX_ERROR = 2 # By convention per sys.exit()
 
@@ -185,10 +191,36 @@ run_progs=lxc start testbox devbox,lxc list
         sys.exit(CMD_LINE_SYNTAX_ERROR)
 
         
+    def _response_yes(self, question, default):
+        if default not in [True, False]:
+                print "A default boolean must be supplied"
+                raise
+
+        if default = 'n':
+            prompt = question + " (yN): "
+            if self.interactive:
+                return False
+        elif default = 'y':
+            prompt = question + " ("Yn"): "
+            if self.interactive:
+                return True
+
+        while True:
+            response = input(prompt)
+            if response.lower() == '':
+                return default
+            elif response.lower == 'n':
+                return False
+            elif response.lower == 'y':
+                return True
+            else:
+                print("Invalid response: ", response, "\n")
+
+
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv,"c:hv", 
-            ["config=", "help", "version"])
+        opts, args = getopt.getopt(argv,"c:hinv", 
+            ["config=", "help", "interactive", "non-interactive", "version"])
     except getopt.GetoptError:
         MountCrypt().print_error(argv)
 
@@ -200,7 +232,10 @@ def main(argv):
             MountCrypt().print_version()
             sys.exit()
         elif opt in ('-c', '--config'):
-            mc = MountCrypt()
+            if opt in ('-n', '--non-interactive'):
+                mc = MountCrypt(interactive=False)
+            else:
+                mc = MountCrypt()
             mc.read_config(arg)
             mc.mount_volumes()
         else:
