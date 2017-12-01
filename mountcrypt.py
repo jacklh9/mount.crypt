@@ -40,7 +40,7 @@ class MountCrypt:
                 print("Volume not present. Skipping...")
                 continue 
 
-            if not is_decrypted(self, volume)
+            if not self.is_decrypted(volume):
                 response = input("Decrypt? ([y],n): ")
                 if response.lower() not in ['','y']:
                     print("Skipping...")
