@@ -14,6 +14,10 @@ class MountCrypt:
         else:
             self.interactive = False
 
+    def is_attached(self, uuid):
+        volume_uuid_path = Path("/".join(('/dev/disk/by-uuid', uuid)))
+        return volume_uuid_path.exists()
+
     def is_decrypted(self, volume):
         # Decrypted device volumes appear in /dev/mapper/
         volume_mapper_path = Path("/".join(('/dev/mapper', volume)))
@@ -40,13 +44,12 @@ class MountCrypt:
 
             # Ensure volume is attached to server else skip volume
             # NOTE: In case it's at an off-site backup location today
-            volume_uuid_path = Path("/".join(('/dev/disk/by-uuid', uuid)))
-            if not volume_uuid_path.exists():
+            if not self.is_attached(uuid):
                 print("Volume not present. Skipping...")
                 continue 
 
             if not self.is_decrypted(volume):
-                if not self._response_yes("Decrypt?", default=True)
+                if not self._response_yes("Decrypt?", default=True):
                     print("Skipping...")
                     continue
                 
@@ -80,7 +83,7 @@ class MountCrypt:
                         continue
                     else:
                         # See if the user even WANTS to mount this.
-                        if self._response_yes("Mount?", default=True):
+                        if not self._response_yes("Mount?", default=True):
                             print("Skipping...")
                             continue
                         else:
@@ -192,32 +195,35 @@ run_progs=lxc start testbox devbox,lxc list
 
         
     def _response_yes(self, question, default):
-        if default not in [True, False]:
-                print "A default boolean must be supplied"
-                raise
+        if type(default) is not bool:
+                print("A default boolean must be supplied")
+                raise TypeError
 
-        if default = 'n':
-            prompt = question + " (yN): "
-            if self.interactive:
-                return False
-        elif default = 'y':
-            prompt = question + " ("Yn"): "
-            if self.interactive:
+        if default == True:
+            prompt = question + " [Y/n] "
+            if not self.interactive:
                 return True
+        elif default == False:
+            prompt = question + " [y/N] "
+            if not self.interactive:
+                return False
 
         while True:
             response = input(prompt)
             if response.lower() == '':
                 return default
-            elif response.lower == 'n':
-                return False
-            elif response.lower == 'y':
+            elif response.lower() in ['y','yes']:
                 return True
+            elif response.lower() in ['n','no']:
+                return False
             else:
                 print("Invalid response: ", response, "\n")
 
 
 def main(argv):
+    interactive = True
+    config = "mountcrypt.ini"
+
     try:
         opts, args = getopt.getopt(argv,"c:hinv", 
             ["config=", "help", "interactive", "non-interactive", "version"])
@@ -225,24 +231,26 @@ def main(argv):
         MountCrypt().print_error(argv)
 
     for opt, arg in opts:
-        if opt in ('-h', '--help'):
+        if opt in ('-c', '--config'):
+            config = arg
+        elif opt in ('-h', '--help'):
             MountCrypt().print_usage()
             sys.exit()
+        elif opt in ('-i', '--interactive'):
+            interactive = True
+        elif opt in ('-n', '--non-interactive'):
+            interactive = False
         elif opt in ('-v', '--version'):
             MountCrypt().print_version()
             sys.exit()
-        elif opt in ('-c', '--config'):
-            if opt in ('-n', '--non-interactive'):
-                mc = MountCrypt(interactive=False)
-            else:
-                mc = MountCrypt()
-            mc.read_config(arg)
-            mc.mount_volumes()
         else:
             MountCrypt().print_error(opt)
 
     if not opts:
         MountCrypt().print_error(argv)
 
+    mc = MountCrypt(interactive=interactive)
+    mc.read_config(config)
+    mc.mount_volumes()
 
 if __name__ == "__main__": main(sys.argv[1:])
