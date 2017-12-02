@@ -1,28 +1,29 @@
-# mount.crypt
+# MountCrypt
 Script to decrypt encrypted luks volumes and mount with multiple mount points
 
 
 USAGE:
 
-mount.crypt.py [options]
+mountcrypt.py [options]
 
 
 OPTIONS
 
-    -c, --config <my-config.ini>     Configuration file
-    
-    -h, --help                    Print this help
-    
+    -c, --config <my-config.ini>    Configuration file
+    -n, --non-interactive           Non-interactive mode
+        NOTE: You will still be prompted for decryption passphrase, if needed.
+    -i, --interactive               Interactive mode [default]
+    -h, --help         
 
 EXAMPLE CONFIG FILE:
 
-    See mount.crypt.ini
+    See mountcrypt.ini
 
 
 SAMPLE RUN:
 
-    root@hostbox # ./mount.crypt.sh
-    Using config ./mount.crypt.ini
+    root@hostbox # ./mountcrypt.sh
+    Using config ./mountcrypt.ini
     
     Volume: backup_2.7T_1
     UUID: 217b80b0-1234-45bd-be92-627f61e65542

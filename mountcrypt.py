@@ -6,8 +6,22 @@ from pathlib import Path
 
 class MountCrypt:
     
-    def __init__(self):
+    def __init__(self, interactive=True):
         self.version = "0.2.3b"
+        # We explicity check if a valid boolean
+        if interactive == True:
+            self.interactive = True
+        else:
+            self.interactive = False
+
+    def is_attached(self, uuid):
+        volume_uuid_path = Path("/".join(('/dev/disk/by-uuid', uuid)))
+        return volume_uuid_path.exists()
+
+    def is_decrypted(self, volume):
+        # Decrypted device volumes appear in /dev/mapper/
+        volume_mapper_path = Path("/".join(('/dev/mapper', volume)))
+        return volume_mapper_path.exists()
 
     def print_version(self):
         print("Version: {version}".format(version=self.version))
@@ -30,15 +44,12 @@ class MountCrypt:
 
             # Ensure volume is attached to server else skip volume
             # NOTE: In case it's at an off-site backup location today
-            volume_uuid_path = Path("/".join(('/dev/disk/by-uuid', uuid)))
-            if not volume_uuid_path.exists():
+            if not self.is_attached(uuid):
                 print("Volume not present. Skipping...")
                 continue 
 
-            volume_mapper_path = Path("/".join(('/dev/mapper', volume)))
-            if not volume_mapper_path.exists():
-                response = input("Decrypt? ([y],n): ")
-                if response.lower() not in ['','y']:
+            if not self.is_decrypted(volume):
+                if not self._response_yes("Decrypt?", default=True):
                     print("Skipping...")
                     continue
                 
@@ -72,8 +83,7 @@ class MountCrypt:
                         continue
                     else:
                         # See if the user even WANTS to mount this.
-                        response = input("Mount? ([y],n): ")
-                        if response.lower() not in ['','y']:
+                        if not self._response_yes("Mount?", default=True):
                             print("Skipping...")
                             continue
                         else:
@@ -90,12 +100,20 @@ class MountCrypt:
             else:
                 print("Errors found! Did not run associated program(s).")
 
+    def unmount_volumes(self):
+        pass
+        #for volume in self.volumes:
+            #is volume decrypted
+                # for each volume mount
+                    # is mounted
+                        # ask to unmount
+        
+
     def run_programs(self, volume):
         if (self.config.has_option(volume,'run_progs')):
             for program in self.config[volume]['run_progs'].split(','):
                 print("TASK: {}".format(program));
-                response = input("Run the above task? ([y],n): ")
-                if response.lower() in ['','y']:
+                if self._response_yes("Run the above task?", default=True):
                     try:
                         subprocess.run([program], shell=True, check=True)
                     except Exception as details:
@@ -110,8 +128,11 @@ class MountCrypt:
         usage_text="""{program} [options]
 
 OPTIONS
-    -c, --config <my-config.ini>     Configuration file
-    -h, --help                    Print this help
+    -c, --config <my-config.ini>    Configuration file
+    -n, --non-interactive           Non-interactive mode
+        NOTE: You will still be prompted for decryption passphrase, if needed.
+    -i, --interactive               Interactive mode [default]
+    -h, --help                      Print this help
 
 CONFIG FILE
 
@@ -159,6 +180,7 @@ run_progs=lxc start testbox devbox,lxc list
 
         ### End print_usage()
 
+
     def print_error(self, args=[]):
         CMD_LINE_SYNTAX_ERROR = 2 # By convention per sys.exit()
 
@@ -172,29 +194,63 @@ run_progs=lxc start testbox devbox,lxc list
         sys.exit(CMD_LINE_SYNTAX_ERROR)
 
         
+    def _response_yes(self, question, default):
+        if type(default) is not bool:
+                print("A default boolean must be supplied")
+                raise TypeError
+
+        if default == True:
+            prompt = question + " [Y/n] "
+            if not self.interactive:
+                return True
+        elif default == False:
+            prompt = question + " [y/N] "
+            if not self.interactive:
+                return False
+
+        while True:
+            response = input(prompt)
+            if response.lower() == '':
+                return default
+            elif response.lower() in ['y','yes']:
+                return True
+            elif response.lower() in ['n','no']:
+                return False
+            else:
+                print("Invalid response: ", response, "\n")
+
+
 def main(argv):
+    interactive = True
+    config = "mountcrypt.ini"
+
     try:
-        opts, args = getopt.getopt(argv,"c:hv", 
-            ["config=", "help", "version"])
+        opts, args = getopt.getopt(argv,"c:hinv", 
+            ["config=", "help", "interactive", "non-interactive", "version"])
     except getopt.GetoptError:
         MountCrypt().print_error(argv)
 
     for opt, arg in opts:
-        if opt in ('-h', '--help'):
+        if opt in ('-c', '--config'):
+            config = arg
+        elif opt in ('-h', '--help'):
             MountCrypt().print_usage()
             sys.exit()
+        elif opt in ('-i', '--interactive'):
+            interactive = True
+        elif opt in ('-n', '--non-interactive'):
+            interactive = False
         elif opt in ('-v', '--version'):
             MountCrypt().print_version()
             sys.exit()
-        elif opt in ('-c', '--config'):
-            mc = MountCrypt()
-            mc.read_config(arg)
-            mc.mount_volumes()
         else:
             MountCrypt().print_error(opt)
 
     if not opts:
         MountCrypt().print_error(argv)
 
+    mc = MountCrypt(interactive=interactive)
+    mc.read_config(config)
+    mc.mount_volumes()
 
 if __name__ == "__main__": main(sys.argv[1:])
