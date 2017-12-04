@@ -1,3 +1,4 @@
 #!/bin/bash
 
-python3 ./mountcrypt_unittest.py
+python3 ./test_*.py
+
