@@ -14,6 +14,12 @@ class MountCrypt:
         else:
             self.interactive = False
 
+    def decrypt_volume(volume, uuid):
+        p = subprocess.Popen([self.cryptsetup, "open", "--type", "luks", "UUID=" + uuid, volume],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
+        p.stdin.write(bytes(getpass.getpass("Enter passphrase: "), 'utf-8'))
+        p.communicate()[0]
+        p.stdin.close()
+
     def is_attached(self, uuid):
         volume_uuid_path = Path("/".join(('/dev/disk/by-uuid', uuid)))
         return volume_uuid_path.exists()
@@ -22,6 +28,9 @@ class MountCrypt:
         # Decrypted device volumes appear in /dev/mapper/
         volume_mapper_path = Path("/".join(('/dev/mapper', volume)))
         return volume_mapper_path.exists()
+
+    def mount_volume(self, mount_point):
+        subprocess.Popen([self.mount, mnt_pt])
 
     def print_version(self):
         print("Version: {version}".format(version=self.version))
@@ -54,11 +63,7 @@ class MountCrypt:
                     continue
                 
                 try:
-                    # Decrypt volume
-                    p = subprocess.Popen([self.cryptsetup, "open", "--type", "luks", "UUID=" + uuid, volume],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
-                    p.stdin.write(bytes(getpass.getpass("Enter passphrase: "), 'utf-8'))
-                    p.communicate()[0]
-                    p.stdin.close()
+                    decrypt_volume(volume=volume, uuid=uuid)
                 except Exception as details:
                     print("Command error: {}".format(details))
                     num_errors += 1
@@ -88,8 +93,7 @@ class MountCrypt:
                             continue
                         else:
                             try:
-                                # Mount volume
-                                subprocess.Popen([self.mount, mnt_pt])
+                                self.mount_volume(mnt_pt)
                             except Exception as details:
                                 print("Command error: {}".format(details))
                                 num_errors += 1
