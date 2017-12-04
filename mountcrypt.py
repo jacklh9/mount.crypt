@@ -54,7 +54,7 @@ class MountCrypt:
                 try:
                     decrypt_volume(volume=volume, uuid=uuid)
                 except Exception as details:
-                    print("Command error: {}".format(details))
+                    self._print_exception(details)
                     num_errors += 1
 
             else:
@@ -84,7 +84,7 @@ class MountCrypt:
                             try:
                                 self.mount_volume(mnt_pt)
                             except Exception as details:
-                                print("Command error: {}".format(details))
+                                self._print_exception(details)
                                 num_errors += 1
 
             # Did the volume or ANY of the mounts fail?
@@ -183,7 +183,7 @@ run_progs=lxc start testbox devbox,lxc list
                     try:
                         subprocess.run([program], shell=True, check=True)
                     except Exception as details:
-                        print("Error: {}".format(details))
+                        self._print_exception(details)
                 else:
                     print("Skipping...")
         else:
@@ -200,6 +200,9 @@ run_progs=lxc start testbox devbox,lxc list
         
 
     ### Private Methods ###
+
+    def _print_exception(self, exception):
+        print("Command error: {}".format(exception))
 
     def _response_yes(self, question, default):
         if type(default) is not bool:
