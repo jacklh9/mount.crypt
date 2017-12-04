@@ -32,17 +32,6 @@ class MountCrypt:
     def mount_volume(self, mount_point):
         subprocess.Popen([self.mount, mnt_pt])
 
-    def print_version(self):
-        print("Version: {version}".format(version=self.version))
-
-    def read_config(self, config_file):
-        print("Using config {}".format(config_file))
-        self.config = configparser.ConfigParser()
-        self.config.read(config_file)
-        self.cryptsetup = self.config['DEFAULT']['cryptsetup']
-        self.mount = self.config['DEFAULT']['mount']
-        self.volumes = self.config.sections()
-
     def mount_volumes(self):
         for volume in self.volumes:
             uuid = self.config[volume]['UUID']
@@ -104,30 +93,20 @@ class MountCrypt:
             else:
                 print("Errors found! Did not run associated program(s).")
 
-    def unmount_volumes(self):
-        pass
-        #for volume in self.volumes:
-            #is volume decrypted
-                # for each volume mount
-                    # is mounted
-                        # ask to unmount
-        
 
-    def run_programs(self, volume):
-        if (self.config.has_option(volume,'run_progs')):
-            for program in self.config[volume]['run_progs'].split(','):
-                print("TASK: {}".format(program));
-                if self._response_yes("Run the above task?", default=True):
-                    try:
-                        subprocess.run([program], shell=True, check=True)
-                    except Exception as details:
-                        print("Error: {}".format(details))
-                else:
-                    print("Skipping...")
+    def print_error(self, args=[]):
+        CMD_LINE_SYNTAX_ERROR = 2 # By convention per sys.exit()
+
+        if args:
+            # stringify args
+            print("Invalid argument(s): {}".format(' '.join([str(arg) for arg in args])))
         else:
-            print("No tasks to run for this volume.")
+            print ("No arguments specified!")
 
-            
+        print("For help, run: {program} {help_flag}".format(program=basename(__file__), help_flag="[-h | --help]"))
+        sys.exit(CMD_LINE_SYNTAX_ERROR)
+
+        
     def print_usage(self):
         usage_text="""{program} [options]
 
@@ -185,19 +164,43 @@ run_progs=lxc start testbox devbox,lxc list
         ### End print_usage()
 
 
-    def print_error(self, args=[]):
-        CMD_LINE_SYNTAX_ERROR = 2 # By convention per sys.exit()
+    def print_version(self):
+        print("Version: {version}".format(version=self.version))
 
-        if args:
-            # stringify args
-            print("Invalid argument(s): {}".format(' '.join([str(arg) for arg in args])))
+    def read_config(self, config_file):
+        print("Using config {}".format(config_file))
+        self.config = configparser.ConfigParser()
+        self.config.read(config_file)
+        self.cryptsetup = self.config['DEFAULT']['cryptsetup']
+        self.mount = self.config['DEFAULT']['mount']
+        self.volumes = self.config.sections()
+
+    def run_programs(self, volume):
+        if (self.config.has_option(volume,'run_progs')):
+            for program in self.config[volume]['run_progs'].split(','):
+                print("TASK: {}".format(program));
+                if self._response_yes("Run the above task?", default=True):
+                    try:
+                        subprocess.run([program], shell=True, check=True)
+                    except Exception as details:
+                        print("Error: {}".format(details))
+                else:
+                    print("Skipping...")
         else:
-            print ("No arguments specified!")
+            print("No tasks to run for this volume.")
 
-        print("For help, run: {program} {help_flag}".format(program=basename(__file__), help_flag="[-h | --help]"))
-        sys.exit(CMD_LINE_SYNTAX_ERROR)
-
+            
+    def unmount_volumes(self):
+        pass
+        #for volume in self.volumes:
+            #is volume decrypted
+                # for each volume mount
+                    # is mounted
+                        # ask to unmount
         
+
+    ### Private Methods ###
+
     def _response_yes(self, question, default):
         if type(default) is not bool:
                 print("A default boolean must be supplied")
