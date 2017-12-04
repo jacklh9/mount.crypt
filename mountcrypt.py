@@ -14,7 +14,7 @@ class MountCrypt:
         else:
             self.interactive = False
 
-    def decrypt_volume(volume, uuid):
+    def decrypt_volume(self, volume, uuid):
         p = subprocess.Popen([self.cryptsetup, "open", "--type", "luks", "UUID=" + uuid, volume],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
         p.stdin.write(bytes(getpass.getpass("Enter passphrase: "), 'utf-8'))
         p.communicate()[0]
@@ -52,7 +52,7 @@ class MountCrypt:
                     continue
                 
                 try:
-                    decrypt_volume(volume=volume, uuid=uuid)
+                    self.decrypt_volume(volume=volume, uuid=uuid)
                 except Exception as details:
                     self._print_exception(details)
                     num_errors += 1
