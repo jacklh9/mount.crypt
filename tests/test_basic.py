@@ -2,7 +2,7 @@ import sys, unittest
 from unittest.mock import patch
 
 # local modules
-sys.path.append("..")
+sys.path.append(".")
 from mountcrypt import MountCrypt
 
 
@@ -10,7 +10,7 @@ class MountCryptMethodTests(unittest.TestCase):
 
 	def setUp(self):
 		self.mc = MountCrypt()
-		self.mc.read_config("../mountcrypt.ini")
+		self.mc.read_config("./mountcrypt.ini")
 		print ("setUp executed!")
 
 	def tearDown(self):
@@ -49,7 +49,7 @@ class MountCryptTest(unittest.TestCase):
 	@patch('pathlib.Path.exists', mock_path_exists)
 	def testRun(self):
 		mc = MountCrypt(interactive=False)
-		mc.read_config("../mountcrypt.ini")
+		mc.read_config("./mountcrypt.ini")
 		mc.mount_volumes()
 
 
