@@ -372,8 +372,8 @@ def main(argv):
     config = "mountcrypt.ini"
 
     try:
-        opts, args = getopt.getopt(argv,"c:dhV",
-            ["config=", "defaults", "help", "version"])
+        opts, args = getopt.getopt(argv,"c:dDhUV",
+            ["config=", "close", "decrypt", "defaults", "help", "unmount", "version"])
     except getopt.GetoptError:
         MountCrypt().print_error(argv)
 
