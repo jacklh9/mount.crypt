@@ -31,17 +31,19 @@ class MountCrypt:
         SEE: unmount_volume() and unmount_volumes()
 
         '''
+        self._print_volume_info(volume)
         if self.is_decrypted(volume):
             try:
                 subprocess.Popen([self.cryptsetup, "close", volume],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
-                print("Volume {} successfully closed".format(volume))
+                print("Successfully closed")
             except Exception as details:
                 print("Error closing volume {}".format(volume))
                 self._print_exception(details)
         else:
-            print("Volume {} already closed. Skipping...")
+            print("Already closed. Skipping...")
 
     def close_volumes(self):
+        print("Closing volumes...")
         for volume in self.volumes:
             self.close_volume(volume)
 
@@ -91,10 +93,9 @@ class MountCrypt:
         subprocess.Popen([self.mount, mount_point])
 
     def mount_volumes(self):
+        print("Decrypting and mounting volumes...")
         for volume in self.volumes:
-            uuid = self.config[volume]['UUID']
-            print("\nVolume: {}".format(volume))
-            print("UUID: {}".format(uuid))
+            self._print_volume_info(volume)
             num_errors = 0
             volume_mounts = self._get_volume_mounts(volume)
 
@@ -246,8 +247,10 @@ run_progs_unmount=lxc stop testbox devbox,lxc list
         subprocess.Popen([self.unmount, mount_point])
 
     def unmount_volumes(self):
+        print("Unmounting volumes...")
         for volume in self.volumes:
             if self.is_decrypted(volume):
+                self._print_volume_info(volume)
                 for mnt_pt in self._get_volume_mounts(volume):
                     if self.is_mounted(mnt_pt):
                         self.run_unmount_tasks(volume)
@@ -265,9 +268,14 @@ run_progs_unmount=lxc stop testbox devbox,lxc list
         return self.config[volume]['mounts'].split(',')
 
 
-
     def _print_exception(self, exception):
         print("Command error: {}".format(exception))
+
+
+    def _print_volume_info(self, volume):
+        uuid = self.config[volume]['UUID']
+        print("\nVolume: {}".format(volume))
+        print("UUID: {}".format(uuid))
 
     def _response_yes(self, question, default):
         '''
