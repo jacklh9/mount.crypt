@@ -232,7 +232,7 @@ run_progs_unmount=lxc stop testbox devbox,lxc list
         self.config.read(config_file)
         self.cryptsetup = self.config['DEFAULT']['cryptsetup']
         self.mount = self.config['DEFAULT']['mount']
-        self.unmount = self.config['DEFAULT']['umount']
+        self.unmount = self.config['DEFAULT']['unmount']
         self.volumes = self.config.sections()
 
             
