@@ -1,5 +1,10 @@
 # RELEASES
 
+0.3.1b:
+* Config file is now delimited by semi-colons instead of commas
+which closer reflects how separate tasks are delimited in UNIX/Linux.
+* Update README with latest sample run for new features.
+
 0.3b:
 * Can unmount and close volumes (-u and -U).
 

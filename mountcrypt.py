@@ -15,7 +15,7 @@ class MountCrypt:
             False: defaults are used at all prompts; however, user will
             still be prompted for passphrase when decrypting.
         '''
-        self.version = "0.3b"
+        self.version = "0.3.1b"
         # We explicity check if a valid booleans
         if interactive:
             self.interactive = True
@@ -210,7 +210,7 @@ unmount=/bin/umount
 # run_progs_unmount=pkill -u testuser
 # 
 # NOTE: Lists MUST NOT have ANY spaces nor double-quotes 
-# in-between the comma delimiter.
+# in-between the semi-colon delimiter.
 #
 
 [backup]
@@ -219,9 +219,9 @@ mounts=/mnt/backup
 
 [data]
 UUID=456ab45c-de67-8901-a234-bcd5efab601d
-mounts=/mnt/data,/opt/vbox
-run_progs=lxc start testbox devbox,lxc list
-run_progs_unmount=lxc stop testbox devbox,lxc list
+mounts=/mnt/data;/opt/vbox
+run_progs=lxc start testbox devbox;lxc list
+run_progs_unmount=lxc stop testbox devbox;lxc list
 """
 # End here-doc
         print(usage_text.format(program=sys.argv[0]))
@@ -283,7 +283,7 @@ run_progs_unmount=lxc stop testbox devbox,lxc list
         Returns the list of paths of requested mount-points to
         mount per the config file for the particular volume.
         '''
-        return self.config[volume]['mounts'].split(',')
+        return self.config[volume]['mounts'].split(';')
 
 
     def _print_exception(self, exception):
@@ -353,7 +353,7 @@ run_progs_unmount=lxc stop testbox devbox,lxc list
 
         '''
         if (self.config.has_option(volume,config_var)):
-            for program in self.config[volume][config_var].split(','):
+            for program in self.config[volume][config_var].split(';'):
                 print("TASK: {}".format(program));
                 if self._response_yes("Run the above task?", default=True):
                     try:
