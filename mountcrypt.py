@@ -245,8 +245,16 @@ run_progs_unmount=lxc stop testbox devbox,lxc list
         self._run_tasks(volume, 'run_progs_unmount')
 
     def unmount_mountpoint(self, mount_point):
-        print("Unmounting ", mount_point)
-        subprocess.Popen([self.unmount, mount_point])
+        print("Mount point: ", mount_point)
+        if not self._response_yes("Unmount?", default=True):
+            print("Skipping...")
+        else:
+            try:
+                subprocess.Popen([self.unmount, mount_point])
+                print("Successfully unmounted")
+            except Exception as details:
+                print("Error encountered while unmounting.")
+                self._print_exception(details)
 
     def unmount_volumes(self):
         print("Unmounting volumes...")
