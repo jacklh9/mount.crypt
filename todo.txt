@@ -1,4 +1,6 @@
-## OPEN ISSUES
+## OPEN ISSUES AND/OR FEATURE REQUESTS
 
-* Need to refactor mount_volumes(). Too large.
-* Need to add closing luks volumes capability.
+* Add closing luks volumes capability.
+* Graceful error when config file not present.
+* Refactor mount_volumes(). Too large.
+
