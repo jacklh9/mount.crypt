@@ -72,7 +72,8 @@ class MountCrypt:
 
         return is_decrypted
 
-    def is_attached(self, uuid):
+    def is_attached(self, volume):
+        uuid = self._get_volume_uuid(volume)
         volume_uuid_path = Path("/".join(('/dev/disk/by-uuid', uuid)))
         return volume_uuid_path.exists()
 
