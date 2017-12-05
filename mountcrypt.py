@@ -256,7 +256,7 @@ run_progs_unmount=lxc stop testbox devbox,lxc list
                 for mnt_pt in self._get_volume_mounts(volume):
                     if self.is_mounted(mnt_pt):
                         self.run_unmount_tasks(volume)
-                        self.unmount_mountpoint(volume)
+                        self.unmount_mountpoint(mnt_pt)
 
     ### Private Helper Methods ###
 
