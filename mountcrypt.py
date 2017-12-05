@@ -90,7 +90,7 @@ class MountCrypt:
         # ... and see if this particular mountpoint is already mounted.
         return mount_point in system_mounts
 
-    def mount_volume(self, mount_point):
+    def mount_mountpoint(self, mount_point):
         subprocess.Popen([self.mount, mount_point])
 
     def mount_volumes(self):
@@ -138,7 +138,7 @@ class MountCrypt:
                             continue
                         else:
                             try:
-                                self.mount_volume(mnt_pt)
+                                self.mount_mountpoint(mnt_pt)
                             except Exception as details:
                                 self._print_exception(details)
                                 num_errors += 1
@@ -244,7 +244,8 @@ run_progs_unmount=lxc stop testbox devbox,lxc list
     def run_unmount_tasks(self, volume):
         self._run_tasks(volume, 'run_progs_unmount')
 
-    def unmount_volume(self, mount_point):
+    def unmount_mountpoint(self, mount_point):
+        print("Unmounting ", mount_point)
         subprocess.Popen([self.unmount, mount_point])
 
     def unmount_volumes(self):
@@ -255,7 +256,7 @@ run_progs_unmount=lxc stop testbox devbox,lxc list
                 for mnt_pt in self._get_volume_mounts(volume):
                     if self.is_mounted(mnt_pt):
                         self.run_unmount_tasks(volume)
-                        self.unmount_volume(volume)
+                        self.unmount_mountpoint(volume)
 
     ### Private Helper Methods ###
 

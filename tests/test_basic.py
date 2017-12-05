@@ -35,10 +35,11 @@ class MountCryptMock:
 		print("Mocking device currently mounted.")
 		return True
 
-	def mount_volume(self, mount_point):
+	def mount_mountpoint(self, mount_point):
 		print("Mocking volume successfully mounted.")
 
-	def unmount_volume(self, mount_point):
+	def unmount_mountpoint(self, mount_point):
+		print("Unmounting ", mount_point)
 		print("Mocking volume successfully unmounted.")
 
 
@@ -65,8 +66,8 @@ class MountCryptDecryptTests(unittest.TestCase):
 
 	@patch('mountcrypt.MountCrypt.close_volume', MountCryptMock.close_volume)
 	@patch('mountcrypt.MountCrypt.decrypt_volume', MountCryptMock.decrypt_volume)
-	@patch('mountcrypt.MountCrypt.mount_volume', MountCryptMock.mount_volume)
-	@patch('mountcrypt.MountCrypt.unmount_volume', MountCryptMock.unmount_volume)
+	@patch('mountcrypt.MountCrypt.mount_mountpoint', MountCryptMock.mount_mountpoint)
+	@patch('mountcrypt.MountCrypt.unmount_mountpoint', MountCryptMock.unmount_mountpoint)
 	@patch('subprocess.run', MountCryptMock.subprocess_run)
 	@patch('mountcrypt.MountCrypt.is_attached', MountCryptMock.is_attached)
 	@patch('mountcrypt.MountCrypt.is_decrypted', MountCryptMock.is_decrypted_false)
@@ -81,8 +82,8 @@ class MountCryptCloseTests(unittest.TestCase):
 
 	@patch('mountcrypt.MountCrypt.close_volume', MountCryptMock.close_volume)
 	@patch('mountcrypt.MountCrypt.decrypt_volume', MountCryptMock.decrypt_volume)
-	@patch('mountcrypt.MountCrypt.mount_volume', MountCryptMock.mount_volume)
-	@patch('mountcrypt.MountCrypt.unmount_volume', MountCryptMock.unmount_volume)
+	@patch('mountcrypt.MountCrypt.mount_mountpoint', MountCryptMock.mount_mountpoint)
+	@patch('mountcrypt.MountCrypt.unmount_mountpoint', MountCryptMock.unmount_mountpoint)
 	@patch('subprocess.run', MountCryptMock.subprocess_run)
 	@patch('mountcrypt.MountCrypt.is_attached', MountCryptMock.is_attached)
 	@patch('mountcrypt.MountCrypt.is_decrypted', MountCryptMock.is_decrypted_true)
