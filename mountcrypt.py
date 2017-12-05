@@ -7,7 +7,7 @@ from pathlib import Path
 class MountCrypt:
     
     def __init__(self, interactive=True):
-        self.version = "0.2.3b"
+        self.version = "0.2.4b"
         # We explicity check if a valid boolean
         if interactive == True:
             self.interactive = True
@@ -15,10 +15,27 @@ class MountCrypt:
             self.interactive = False
 
     def decrypt_volume(self, volume, uuid):
-        p = subprocess.Popen([self.cryptsetup, "open", "--type", "luks", "UUID=" + uuid, volume],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
-        p.stdin.write(bytes(getpass.getpass("Enter passphrase: "), 'utf-8'))
-        p.communicate()[0]
-        p.stdin.close()
+        ''' 
+        (self, string, string) -> bool
+
+        Runs the command-line program "cryptsetup open --type luks UUID=<device-UUID> <device-mapped-name>".
+        Prompts the user to enter the passphrase to decrypt the volume.
+        Returns True if successful, False otherwise.
+
+        '''
+        is_decrypted = False
+        try:
+            p = subprocess.Popen([self.cryptsetup, "open", "--type", "luks", "UUID=" + uuid, volume],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
+            p.stdin.write(bytes(getpass.getpass("Enter passphrase: "), 'utf-8'))
+            p.communicate()[0]
+            if p.returncode == 0:
+                is_decrypted = True
+        except Exception as details:
+            self._print_exception(details)
+        finally:
+            p.stdin.close()
+
+        return is_decryted
 
     def is_attached(self, uuid):
         volume_uuid_path = Path("/".join(('/dev/disk/by-uuid', uuid)))
@@ -30,7 +47,7 @@ class MountCrypt:
         return volume_mapper_path.exists()
 
     def mount_volume(self, mount_point):
-        subprocess.Popen([self.mount, mnt_pt])
+        subprocess.Popen([self.mount, mount_point])
 
     def mount_volumes(self):
         for volume in self.volumes:
@@ -52,10 +69,13 @@ class MountCrypt:
                     continue
                 
                 try:
-                    self.decrypt_volume(volume=volume, uuid=uuid)
+                    is_decrypted = self.decrypt_volume(volume=volume, uuid=uuid)
                 except Exception as details:
                     self._print_exception(details)
-                    num_errors += 1
+                    is_decrypted = False
+                finally:
+                    if not is_decrypted:
+                        num_errors += 1
 
             else:
                 print("Volume already decrypted.")

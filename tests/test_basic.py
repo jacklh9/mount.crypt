@@ -28,25 +28,31 @@ class MountCryptTest(unittest.TestCase):
 
 	### MOCK METHODS ###
 
-	def mock_decrypt_volume(volume, uuid):
+	def mock_decrypt_volume(self, volume, uuid):
 		print("Mocking decryption of volume.")
+		return True
 
 	def mock_subprocess_run(*args, **kwargs):
 		print("Mocking running of tasks.")
 
-	def mock_path_exists(self):
-		print("Mocking path exists.")
+	def mock_is_attached(self, uuid):
+		print("Mocking device is attached.")
 		return True
 
+	def mock_is_decrypted(self, volume):
+		print("Mocking device not already decryted.")
+		return False
+
 	def mock_mount_volume(self, mount_point):
-		print("Mocking volume mount.")
+		print("Mocking volume successfully mounted.")
 
 	### TESTS ###
 
 	@patch('mountcrypt.MountCrypt.decrypt_volume', mock_decrypt_volume)
 	@patch('mountcrypt.MountCrypt.mount_volume', mock_mount_volume)
 	@patch('subprocess.run', mock_subprocess_run)
-	@patch('pathlib.Path.exists', mock_path_exists)
+	@patch('mountcrypt.MountCrypt.is_attached', mock_is_attached)
+	@patch('mountcrypt.MountCrypt.is_decrypted', mock_is_decrypted)
 	def testRun(self):
 		mc = MountCrypt(interactive=False)
 		mc.read_config("./mountcrypt.ini")
