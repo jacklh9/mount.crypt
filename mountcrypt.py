@@ -112,7 +112,7 @@ class MountCrypt:
                     continue
                 
                 try:
-                    is_decrypted = self.decrypt_volume(volume=volume)
+                    is_decrypted = self.decrypt_volume(volume)
                 except Exception as details:
                     self._print_exception(details)
                     is_decrypted = False
