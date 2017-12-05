@@ -7,7 +7,7 @@ from pathlib import Path
 class MountCrypt:
     
     def __init__(self, interactive=True):
-        self.version = "0.2.3b"
+        self.version = "0.2.4b"
         # We explicity check if a valid boolean
         if interactive == True:
             self.interactive = True
