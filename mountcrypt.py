@@ -38,7 +38,7 @@ class MountCrypt:
             else:
                 try:
                     subprocess.Popen([self.cryptsetup, "close", volume],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
-                    print("Successfully closed")
+                    print("Successfully closed.")
                 except Exception as details:
                     print("Error closing volume.")
                     self._print_exception(details)
@@ -255,7 +255,7 @@ run_progs_unmount=lxc stop testbox devbox,lxc list
         else:
             try:
                 subprocess.Popen([self.unmount, mount_point])
-                print("Successfully unmounted")
+                print("Successfully unmounted.")
             except Exception as details:
                 print("Error encountered while unmounting.")
                 self._print_exception(details)
