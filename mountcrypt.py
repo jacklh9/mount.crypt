@@ -33,12 +33,15 @@ class MountCrypt:
         '''
         self._print_volume_info(volume)
         if self.is_decrypted(volume):
-            try:
-                subprocess.Popen([self.cryptsetup, "close", volume],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
-                print("Successfully closed")
-            except Exception as details:
-                print("Error closing volume {}".format(volume))
-                self._print_exception(details)
+            if not self._response_yes("Close volume?", default=True):
+                print("Leaving open...")
+            else:
+                try:
+                    subprocess.Popen([self.cryptsetup, "close", volume],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
+                    print("Successfully closed")
+                except Exception as details:
+                    print("Error closing volume.")
+                    self._print_exception(details)
         else:
             print("Already closed. Skipping...")
 
