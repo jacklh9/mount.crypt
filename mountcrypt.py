@@ -47,7 +47,7 @@ class MountCrypt:
         for volume in self.volumes:
             self.close_volume(volume)
 
-    def decrypt_volume(self, volume, uuid):
+    def decrypt_volume(self, volume):
         ''' 
         (self, string, string) -> bool
 
@@ -56,6 +56,7 @@ class MountCrypt:
         Returns True if successful, False otherwise.
 
         '''
+        uuid = self._get_volume_uuid(volume)
         is_decrypted = False
         try:
             p = subprocess.Popen([self.cryptsetup, "open", "--type", "luks", "UUID=" + uuid, volume],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
@@ -101,7 +102,7 @@ class MountCrypt:
 
             # Ensure volume is attached to server else skip volume
             # NOTE: In case it's at an off-site backup location today
-            if not self.is_attached(uuid):
+            if not self.is_attached(volume):
                 print("Volume not present. Skipping...")
                 continue 
 
@@ -111,7 +112,7 @@ class MountCrypt:
                     continue
                 
                 try:
-                    is_decrypted = self.decrypt_volume(volume=volume, uuid=uuid)
+                    is_decrypted = self.decrypt_volume(volume=volume)
                 except Exception as details:
                     self._print_exception(details)
                     is_decrypted = False
@@ -258,6 +259,10 @@ run_progs_unmount=lxc stop testbox devbox,lxc list
 
     ### Private Helper Methods ###
 
+    def _get_volume_uuid(self, volume):
+        return self.config[volume]['UUID']
+
+
     def _get_volume_mounts(self, volume):
         ''' 
         (self, volume) -> list of strings
@@ -273,7 +278,7 @@ run_progs_unmount=lxc stop testbox devbox,lxc list
 
 
     def _print_volume_info(self, volume):
-        uuid = self.config[volume]['UUID']
+        uuid = self._get_volume_uuid(volume)
         print("\nVolume: {}".format(volume))
         print("UUID: {}".format(uuid))
 
