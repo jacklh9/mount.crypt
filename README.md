@@ -10,10 +10,12 @@ mountcrypt.py [options]
 OPTIONS
 
     -c, --config <my-config.ini>    Configuration file
-    -n, --non-interactive           Non-interactive mode
-        NOTE: You will still be prompted for decryption passphrase, if needed.
-    -i, --interactive               Interactive mode [default]
-    -h, --help         
+    -d, --decrypt                   Decrypt volumes [default]
+    -D, --defaults                  Accept defaults for all Y/N prompts.
+        NOTE: You may be prompted for decryption passphrase.
+    -h, --help
+    -u, --unmount                   Unmount volumes but don't close.
+    -U, --close                     Unmount and close volumes.         
 
 EXAMPLE CONFIG FILE:
 
@@ -90,5 +92,5 @@ SAMPLE RUN:
     
 LICENSING
 
-    jacklh9/mount.crypt is licensed under the GNU General Public
+    jacklh9/mountcrypt is licensed under the GNU General Public
     License v3.0. See file LICENSE for details.
