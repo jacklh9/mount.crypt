@@ -35,7 +35,7 @@ class MountCrypt:
         finally:
             p.stdin.close()
 
-        return is_decryted
+        return is_decrypted
 
     def is_attached(self, uuid):
         volume_uuid_path = Path("/".join(('/dev/disk/by-uuid', uuid)))
