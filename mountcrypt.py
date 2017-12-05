@@ -1,4 +1,4 @@
- #!python3
+#!python3
 
 import configparser, csv, getopt, getpass, psutil, subprocess, sys, time
 from os.path import basename
@@ -7,12 +7,43 @@ from pathlib import Path
 class MountCrypt:
     
     def __init__(self, interactive=True):
-        self.version = "0.2.4b"
-        # We explicity check if a valid boolean
-        if interactive == True:
+        '''
+        (self, bool)
+
+        interactive: 
+            True: user gets Y/N prompts.
+            False: defaults are used at all prompts; however, user will
+            still be prompted for passphrase when decrypting.
+        '''
+        self.version = "0.3b"
+        # We explicity check if a valid booleans
+        if interactive:
             self.interactive = True
         else:
             self.interactive = False
+
+    def close_volume(self, volume):
+        '''
+        (self, string)
+
+        This method is the inverse of decrypt_volume().
+        Note that all mount points must be closed first.
+        SEE: unmount_volume() and unmount_volumes()
+
+        '''
+        if self.is_decrypted(volume):
+            try:
+                subprocess.Popen([self.cryptsetup, "close", volume],stdout=subprocess.PIPE,stdin=subprocess.PIPE)
+                print("Volume {} successfully closed".format(volume))
+            except Exception as details:
+                print("Error closing volume {}".format(volume))
+                self._print_exception(details)
+        else:
+            print("Volume {} already closed. Skipping...")
+
+    def close_volumes(self):
+        for volume in self.volumes:
+            self.close_volume(volume)
 
     def decrypt_volume(self, volume, uuid):
         ''' 
@@ -31,6 +62,7 @@ class MountCrypt:
             if p.returncode == 0:
                 is_decrypted = True
         except Exception as details:
+            print("Error encountered during decryption attempt:")
             self._print_exception(details)
         finally:
             p.stdin.close()
@@ -46,6 +78,15 @@ class MountCrypt:
         volume_mapper_path = Path("/".join(('/dev/mapper', volume)))
         return volume_mapper_path.exists()
 
+    def is_mounted(self, mount_point):
+        # object of all active system partitions
+        partitions = psutil.disk_partitions()
+        # Extract a list of existing mounted
+        # mountpoints from partitions object...
+        system_mounts = list([partition.mountpoint for partition in partitions])
+        # ... and see if this particular mountpoint is already mounted.
+        return mount_point in system_mounts
+
     def mount_volume(self, mount_point):
         subprocess.Popen([self.mount, mount_point])
 
@@ -55,7 +96,7 @@ class MountCrypt:
             print("\nVolume: {}".format(volume))
             print("UUID: {}".format(uuid))
             num_errors = 0
-            mounts = self.config[volume]['mounts'].split(',')
+            volume_mounts = self._get_volume_mounts(volume)
 
             # Ensure volume is attached to server else skip volume
             # NOTE: In case it's at an off-site backup location today
@@ -83,16 +124,9 @@ class MountCrypt:
             # Attempt mounting requested mount-points,
             # if volume successfully mounted earier.
             if (num_errors == 0):
-                partitions = psutil.disk_partitions()
-
-                for mnt_pt in mounts:
+                for mnt_pt in volume_mounts:
                     print("Mounting: {}".format(mnt_pt))
-
-                    # Extract a list of existing mounted
-                    # mountpoints from partitions object...
-                    mounts = list([partition.mountpoint for partition in partitions])
-                    # ... and see if this particular mountpoint is already mounted.
-                    if mnt_pt in mounts:
+                    if self.is_mounted(mnt_pt):
                         print("Already mounted. Skipping...")
                         continue
                     else:
@@ -109,7 +143,7 @@ class MountCrypt:
 
             # Did the volume or ANY of the mounts fail?
             if (num_errors == 0):
-                self.run_programs(volume)
+                self.run_mount_tasks(volume)
             else:
                 print("Errors found! Did not run associated program(s).")
 
@@ -132,10 +166,12 @@ class MountCrypt:
 
 OPTIONS
     -c, --config <my-config.ini>    Configuration file
-    -n, --non-interactive           Non-interactive mode
-        NOTE: You will still be prompted for decryption passphrase, if needed.
-    -i, --interactive               Interactive mode [default]
+    -d, --decrypt                   Decrypt volumes [default]
+    -D, --defaults                  Accept defaults for all Y/N prompts.
+        NOTE: You may be prompted for decryption passphrase.
     -h, --help                      Print this help
+    -u, --unmount                   Unmount volumes but don't close.
+    -U, --close                     Unmount and close volumes. 
 
 CONFIG FILE
 
@@ -144,6 +180,7 @@ EXAMPLE:
 [DEFAULT]
 cryptsetup=/sbin/cryptsetup
 mount=/bin/mount
+unmount=/bin/umount
 
 # Mount Definitions:
 # ------------------
@@ -158,11 +195,13 @@ mount=/bin/mount
 # mount.crypt.ini entry format:
 #
 # [mapper-name]
-# UUID = abc...def
-# mounts = /mnt/mount-point,/mnt/other-mount-point,...
+# UUID=abc...def
+# mounts=/mnt/mount-point,/mnt/other-mount-point,...
 #
 # Optionally include any commands to run after a successful mount
-# run_progs = my-script.sh --some-flag,my-other-script.sh
+# and before an unmount.
+# run_progs=my-script.sh --some-flag,my-other-script.sh
+# run_progs_unmount=pkill -u testuser
 # 
 # NOTE: Lists MUST NOT have ANY spaces nor double-quotes 
 # in-between the comma delimiter.
@@ -176,7 +215,7 @@ mounts=/mnt/backup
 UUID=456ab45c-de67-8901-a234-bcd5efab601d
 mounts=/mnt/data,/opt/vbox
 run_progs=lxc start testbox devbox,lxc list
-
+run_progs_unmount=lxc stop testbox devbox,lxc list
 """
 # End here-doc
         print(usage_text.format(program=sys.argv[0]))
@@ -193,38 +232,63 @@ run_progs=lxc start testbox devbox,lxc list
         self.config.read(config_file)
         self.cryptsetup = self.config['DEFAULT']['cryptsetup']
         self.mount = self.config['DEFAULT']['mount']
+        self.unmount = self.config['DEFAULT']['umount']
         self.volumes = self.config.sections()
 
-    def run_programs(self, volume):
-        if (self.config.has_option(volume,'run_progs')):
-            for program in self.config[volume]['run_progs'].split(','):
-                print("TASK: {}".format(program));
-                if self._response_yes("Run the above task?", default=True):
-                    try:
-                        subprocess.run([program], shell=True, check=True)
-                    except Exception as details:
-                        self._print_exception(details)
-                else:
-                    print("Skipping...")
-        else:
-            print("No tasks to run for this volume.")
-
             
-    def unmount_volumes(self):
-        pass
-        #for volume in self.volumes:
-            #is volume decrypted
-                # for each volume mount
-                    # is mounted
-                        # ask to unmount
-        
+    def run_mount_tasks(self, volume):
+        self._run_tasks(volume, 'run_progs')
 
-    ### Private Methods ###
+    def run_unmount_tasks(self, volume):
+        self._run_tasks(volume, 'run_progs_unmount')
+
+    def unmount_volume(self, mount_point):
+        subprocess.Popen([self.unmount, mount_point])
+
+    def unmount_volumes(self):
+        for volume in self.volumes:
+            if self.is_decrypted(volume):
+                for mnt_pt in self._get_volume_mounts(volume):
+                    if self.is_mounted(mnt_pt):
+                        self.run_unmount_tasks(volume)
+                        self.unmount_volume(volume)
+
+    ### Private Helper Methods ###
+
+    def _get_volume_mounts(self, volume):
+        ''' 
+        (self, volume) -> list of strings
+
+        Returns the list of paths of requested mount-points to
+        mount per the config file for the particular volume.
+        '''
+        return self.config[volume]['mounts'].split(',')
+
+
 
     def _print_exception(self, exception):
         print("Command error: {}".format(exception))
 
     def _response_yes(self, question, default):
+        '''
+            (self, string, bool) -> bool
+
+            Prompt the user for a yes/no response,
+            indicating if YES is the default (True) choice
+            or not (False).
+
+            NOTE: A default choice is required and must
+            always be explicitly set. The default choice
+            will be returned if the user leaves the response
+            blank and presses enter. The default response
+            (e.g., if set to True) will be indicated to the 
+            user as a capital letter, as follows:
+
+                Do you agree? [Y/n] 
+
+            Returns True if the answer was 'y' or 'yes' 
+            (regardless of case) else False.
+        '''
         if type(default) is not bool:
                 print("A default boolean must be supplied")
                 raise TypeError
@@ -249,28 +313,74 @@ run_progs=lxc start testbox devbox,lxc list
             else:
                 print("Invalid response: ", response, "\n")
 
+    def _run_tasks(self, volume, config_var):
+        '''
+        (self, string, string)
+
+        config_var should be a string of either of the following:
+            'run_progs', 'run_progs_unmount'
+
+        The method will then pull the data from the config file, build
+        a list and then iterate over the list and run each program.
+
+        Returns nothing.
+
+        '''
+        if (self.config.has_option(volume,config_var)):
+            for program in self.config[volume][config_var].split(','):
+                print("TASK: {}".format(program));
+                if self._response_yes("Run the above task?", default=True):
+                    try:
+                        subprocess.run([program], shell=True, check=True)
+                    except Exception as details:
+                        self._print_exception(details)
+                else:
+                    print("Skipping...")
+        else:
+            print("No tasks to run for this volume.")
+
 
 def main(argv):
+    '''
+    interactive:
+        See description for __init__.
+
+    decrypt:
+        True: decrypt volumes
+        False: don't decrypt. Unmount volumes.
+
+    close:
+        False: If decrypt is False, then unmount all volumes but don't close.
+        True: If decrypt is False, unmount AND close (undo decrypt) of all volumes.
+    '''
+    close=False
+    decrypt=True
     interactive = True
     config = "mountcrypt.ini"
 
     try:
-        opts, args = getopt.getopt(argv,"c:hinv", 
-            ["config=", "help", "interactive", "non-interactive", "version"])
+        opts, args = getopt.getopt(argv,"c:dhV",
+            ["config=", "defaults", "help", "version"])
     except getopt.GetoptError:
         MountCrypt().print_error(argv)
 
     for opt, arg in opts:
-        if opt in ('-c', '--config'):
+        if opt in ('-U', '--close'):
+            decrypt = False
+            close = True
+        elif opt in ('-c', '--config'):
             config = arg
+        elif opt in ('-d', '--decrypt'):
+            decrypt = True
+        elif opt in ('-D', '--defaults'):
+            interactive = False
         elif opt in ('-h', '--help'):
             MountCrypt().print_usage()
             sys.exit()
-        elif opt in ('-i', '--interactive'):
-            interactive = True
-        elif opt in ('-n', '--non-interactive'):
-            interactive = False
-        elif opt in ('-v', '--version'):
+        elif opt in ('-u', '--unmount'):
+            decrypt = False
+            close = False
+        elif opt in ('-V', '--version'):
             MountCrypt().print_version()
             sys.exit()
         else:
@@ -281,6 +391,12 @@ def main(argv):
 
     mc = MountCrypt(interactive=interactive)
     mc.read_config(config)
-    mc.mount_volumes()
+
+    if decrypt:
+        mc.mount_volumes()
+    else:
+        mc.unmount_volumes()
+        if close:
+            mc.close_volumes()
 
 if __name__ == "__main__": main(sys.argv[1:])
