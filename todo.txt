@@ -1,6 +1,4 @@
 ## OPEN ISSUES AND/OR FEATURE REQUESTS
-
-* Add closing luks volumes capability.
+* Add -v, --verbose and suppress stdout prints when not specified.
 * Graceful error when config file not present.
 * Refactor mount_volumes(). Too large.
-
