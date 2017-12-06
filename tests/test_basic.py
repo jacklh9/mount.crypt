@@ -48,20 +48,38 @@ class MountCryptMethodTests(unittest.TestCase):
 	def setUp(self):
 		self.mc = MountCrypt()
 		self.mc.read_config("./mountcrypt.ini")
-		print ("setUp executed!")
+		print ("setUp() completed")
 
 	def tearDown(self):
-		print ("tearDown executed!")
+		print ("tearDown() completed")
 
 	### TESTS ###
 
-	def testVersion1(self):
-		print("Version test...")
+	def testVersionInfo(self):
+		print("Test Version info...")
 		obj = self.mc.version
 		cls = type("string class")
 		self.assertIsInstance(obj, cls, "Version not in string format")
 
-        
+	def testResponseDefaults(self):
+		print("Test response defaults")
+		self.mc.interactive=False
+		self.assertEqual(self.mc._response_yes(question="",default=True), True)
+		self.assertEqual(self.mc._response_yes(question="",default=False), False)	
+
+	def testReturnCodes(self):
+		print("Test returncode values...")
+		with self.assertRaises(SystemExit) as details:
+			self.mc._quit()
+
+		self.assertEqual(details.exception.code, 0)
+
+		with self.assertRaises(SystemExit) as details:
+			self.mc._quit(2)
+
+		self.assertEqual(details.exception.code, 2)
+
+		
 class MountCryptDecryptTests(unittest.TestCase):
 
 	@patch('mountcrypt.MountCrypt.close_volume', MountCryptMock.close_volume)

@@ -15,7 +15,7 @@ class MountCrypt:
             False: defaults are used at all prompts; however, user will
             still be prompted for passphrase when decrypting.
         '''
-        self.version = "0.3.1b"
+        self.version = "0.3.2b"
         # We explicity check if a valid booleans
         if interactive:
             self.interactive = True
@@ -164,7 +164,7 @@ class MountCrypt:
             print ("No arguments specified!")
 
         print("For help, run: {program} {help_flag}".format(program=basename(__file__), help_flag="[-h | --help]"))
-        sys.exit(CMD_LINE_SYNTAX_ERROR)
+        self._quit(CMD_LINE_SYNTAX_ERROR)
 
         
     def print_usage(self):
@@ -295,6 +295,10 @@ run_progs_unmount=lxc stop testbox devbox;lxc list
         print("\nVolume: {}".format(volume))
         print("UUID: {}".format(uuid))
 
+
+    def _quit(self, returncode=0):
+        sys.exit(returncode)
+
     def _response_yes(self, question, default):
         '''
             (self, string, bool) -> bool
@@ -320,11 +324,11 @@ run_progs_unmount=lxc stop testbox devbox;lxc list
                 raise TypeError
 
         if default == True:
-            prompt = question + " [Y/n] "
+            prompt = question + " [Y/n/q] "
             if not self.interactive:
                 return True
         elif default == False:
-            prompt = question + " [y/N] "
+            prompt = question + " [y/N/q] "
             if not self.interactive:
                 return False
 
@@ -336,6 +340,9 @@ run_progs_unmount=lxc stop testbox devbox;lxc list
                 return True
             elif response.lower() in ['n','no']:
                 return False
+            elif response.lower() in ['q', 'quit', 'exit']:
+                print("Quiting all remaining tasks...")
+                self._quit()
             else:
                 print("Invalid response: ", response, "\n")
 
@@ -402,13 +409,13 @@ def main(argv):
             interactive = False
         elif opt in ('-h', '--help'):
             MountCrypt().print_usage()
-            sys.exit()
+            MountCrypt()._quit()
         elif opt in ('-u', '--unmount'):
             decrypt = False
             close = False
         elif opt in ('-V', '--version'):
             MountCrypt().print_version()
-            sys.exit()
+            MountCrypt()._quit()
         else:
             MountCrypt().print_error(opt)
 
