@@ -1,4 +1,10 @@
 ## OPEN ISSUES AND/OR FEATURE REQUESTS
 * Add -v, --verbose and suppress stdout prints when not specified.
+* Reconfigure -h to just show list of commands without config file example.
+* Add -H to show help menu, including config file example.
+* Add "s" option to Y/N prompt to skip remaining mounts and go straight to
+ closing volumes. (Great for configs with MANY volumes.)
+* Add config var "run_progs_pre-close" for tasks to run pre volume close.
+* Add config var "run_progs_post-close" for tasks to run post volume close.
 * Graceful error when config file not present.
 * Refactor mount_volumes(). Too large.
