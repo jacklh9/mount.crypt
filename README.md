@@ -1,5 +1,5 @@
 # MountCrypt
-Script to decrypt encrypted luks volumes and mount with multiple mount points
+Helper script for use with Linux "cryptsetup" tools to automate decrypting multiple LUKS encrypted volumes, start/stopping related services prior to creating/deleting respective mount points.
 
 
 USAGE:
