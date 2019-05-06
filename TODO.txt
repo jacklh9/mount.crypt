@@ -1,4 +1,5 @@
 ## OPEN ISSUES AND/OR FEATURE REQUESTS
+* Add ability to do var string interpolation
 * Add -v, --verbose and suppress stdout prints when not specified.
 * Reconfigure -h to just show list of commands without config file example.
 * Add -H to show help menu, including config file example.
