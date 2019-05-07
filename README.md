@@ -1,5 +1,5 @@
 # MountCrypt
-Helper script for use with Linux "cryptsetup" tools to automate decrypting multiple LUKS encrypted volumes, start/stopping related services prior to creating/deleting respective mount points.
+Python3 helper script for use with Linux "cryptsetup" tools to automate decrypting multiple LUKS encrypted volumes, start/stopping related services prior to creating/deleting respective mount points.
 
 
 USAGE:
