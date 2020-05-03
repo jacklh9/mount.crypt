@@ -22,7 +22,8 @@ EXAMPLE CONFIG FILE:
 
 
 SETUP:
-NOTE: Requires Python3
+NOTE: Requires Python3 and the following:
+
 apt install python3-pip
 pip3 install -r requirements.txt
 
