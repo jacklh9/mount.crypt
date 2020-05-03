@@ -1,7 +1,6 @@
 # MountCrypt
 Python3 helper script for use with Linux "cryptsetup" tools to automate decrypting multiple LUKS encrypted volumes, start/stopping related services prior to creating/deleting respective mount points.
 
-
 USAGE:
 
 mountcrypt.py [options]
@@ -19,7 +18,12 @@ OPTIONS
 
 EXAMPLE CONFIG FILE:
 
-    See mountcrypt.ini
+    SEE: mountcrypt.ini
+
+
+SETUP:
+apt install python3-pip
+pip3 install -r requirements.txt
 
 
 DECRYPT AND MOUNT SAMPLE RUN:
