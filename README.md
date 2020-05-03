@@ -22,10 +22,11 @@ EXAMPLE CONFIG FILE:
 
 
 SETUP:
+    
 NOTE: Requires Python3 and the following:
 
-apt install python3-pip
-pip3 install -r requirements.txt
+    apt install python3-pip
+    pip3 install -r requirements.txt
 
 
 DECRYPT AND MOUNT SAMPLE RUN:
